@@ -239,6 +239,8 @@ function randomizeBackgroundDecorations() {
     const balloonCount = parseInt(balloonContainer.dataset.count) || 8;
     const colors = ['var(--color-coral)', 'var(--color-gold)', 'var(--color-blue)', 'var(--color-green)'];
     
+    let balloonsPopped = 0;
+
     for (let i = 0; i < balloonCount; i++) {
       const b = document.createElement('div');
       b.className = 'balloon';
@@ -250,6 +252,23 @@ function randomizeBackgroundDecorations() {
       // Make some balloons slightly smaller/larger
       const scale = 0.8 + Math.random() * 0.5;
       b.style.transform = `scale(${scale})`;
+      
+      // Add pop interaction
+      b.addEventListener('pointerdown', (e) => {
+        if (b.classList.contains('popped')) return;
+        b.classList.add('popped');
+        balloonsPopped++;
+        
+        // Pop 5 balloons to unlock golden theme
+        if (balloonsPopped === 5) {
+          const isGolden = document.body.classList.toggle('golden-theme');
+          if (typeof showGoldenToast === 'function') {
+            showGoldenToast(isGolden ? '👑 Royal Gold Mode Unlocked!' : '🔵 Back to Normal');
+          }
+          // Reset count so it can be toggled again
+          balloonsPopped = 0;
+        }
+      });
       
       balloonContainer.appendChild(b);
     }
