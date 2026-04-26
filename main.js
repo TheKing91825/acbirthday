@@ -513,7 +513,7 @@ function initWordle() {
 
 /* ============================================
    EASTER EGG 11: SHAKE TO CELEBRATE
-   Uses DeviceMotionEvent to detect phone shake
+   Uses DeviceMotionEvent — shows iOS permission button
    ============================================ */
 function initShakeToConfetti() {
   let lastX = null, lastY = null, lastZ = null;
@@ -524,37 +524,31 @@ function initShakeToConfetti() {
   function handleMotion(e) {
     const acc = e.accelerationIncludingGravity;
     if (!acc) return;
-
     const { x, y, z } = acc;
     if (lastX === null) { lastX = x; lastY = y; lastZ = z; return; }
-
     const delta = Math.abs(x - lastX) + Math.abs(y - lastY) + Math.abs(z - lastZ);
     lastX = x; lastY = y; lastZ = z;
-
     const now = Date.now();
     if (delta > SHAKE_THRESHOLD && now - lastShakeTime > COOLDOWN_MS) {
       lastShakeTime = now;
-      // Fire a BIG confetti cannon — 3 bursts
       initConfetti();
       setTimeout(initConfetti, 400);
       setTimeout(initConfetti, 800);
     }
   }
 
-  // iOS 13+ requires permission
-  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-    // We'll ask permission on the first user interaction
-    const askOnce = () => {
-      DeviceMotionEvent.requestPermission().then(state => {
-        if (state === 'granted') {
-          window.addEventListener('devicemotion', handleMotion);
-        }
-      }).catch(() => {});
-      document.removeEventListener('touchstart', askOnce);
-    };
-    document.addEventListener('touchstart', askOnce, { once: true });
-  } else if (typeof DeviceMotionEvent !== 'undefined') {
+  function attachMotion() {
     window.addEventListener('devicemotion', handleMotion);
+  }
+
+  if (typeof DeviceMotionEvent === 'undefined') return; // not supported
+
+  if (typeof DeviceMotionEvent.requestPermission === 'function') {
+    // iOS 13+ — must request from a real click. Show a small floating button.
+    showMotionPermissionButton(attachMotion);
+  } else {
+    // Android / non-iOS — just attach directly
+    attachMotion();
   }
 }
 
@@ -627,88 +621,126 @@ function initGravityBalloons() {
   if (!window.DeviceOrientationEvent) return;
 
   let tiltX = 0, tiltY = 0;
-  let animFrame;
 
   function handleOrientation(e) {
-    // gamma = left/right tilt (-90 to 90), beta = front/back (-180 to 180)
-    tiltX = (e.gamma || 0) / 45; // normalize to -1 .. 1
-    tiltY = (e.beta  || 0) / 90; // normalize to -1 .. 1
+    tiltX = (e.gamma || 0) / 45; // left/right, normalized -1..1
+    tiltY = (e.beta  || 0) / 90; // front/back, normalized -1..1
   }
 
   function applyTilt() {
     const balloons = document.querySelectorAll('.balloon');
     balloons.forEach((b, i) => {
-      // Each balloon drifts at a slightly different rate for a natural effect
       const factor = 0.8 + (i % 3) * 0.4;
       const shiftX = tiltX * 30 * factor;
       const shiftY = tiltY * 15 * factor;
       b.style.marginLeft = `${shiftX}px`;
       b.style.marginTop  = `${shiftY}px`;
     });
-    animFrame = requestAnimationFrame(applyTilt);
+    requestAnimationFrame(applyTilt);
   }
 
-  function startGravity() {
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-      DeviceOrientationEvent.requestPermission().then(state => {
-        if (state === 'granted') {
-          window.addEventListener('deviceorientation', handleOrientation);
-          applyTilt();
-        }
-      }).catch(() => {});
-    } else {
-      window.addEventListener('deviceorientation', handleOrientation);
-      applyTilt();
-    }
-    document.removeEventListener('touchstart', startGravity);
+  function attachOrientation() {
+    window.addEventListener('deviceorientation', handleOrientation);
+    applyTilt();
   }
 
-  // Start on first touch (handles iOS permission)
-  document.addEventListener('touchstart', startGravity, { once: true });
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // iOS 13+ — reuse the same permission button as shake
+    showMotionPermissionButton(attachOrientation);
+  } else {
+    attachOrientation();
+  }
+}
+
+/**
+ * Shows a small floating button to request iOS motion permission.
+ * Calls onGranted() if the user approves. Button disappears afterwards.
+ */
+function showMotionPermissionButton(onGranted) {
+  // Only show on iOS (has requestPermission)
+  if (typeof DeviceMotionEvent === 'undefined' ||
+      typeof DeviceMotionEvent.requestPermission !== 'function') {
+    onGranted();
+    return;
+  }
+
+  // Don't create duplicates
+  if (document.getElementById('motion-permission-btn')) {
+    document.getElementById('motion-permission-btn').__callbacks.push(onGranted);
+    return;
+  }
+
+  const btn = document.createElement('button');
+  btn.id = 'motion-permission-btn';
+  btn.__callbacks = [onGranted];
+  btn.textContent = '🎊 Enable Motion Effects';
+  btn.style.cssText = `
+    position: fixed;
+    bottom: 80px;
+    right: 16px;
+    z-index: 9998;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.5);
+    font-family: var(--font-body);
+  `;
+
+  btn.addEventListener('click', () => {
+    // Must be in a real click handler for iOS
+    Promise.all([
+      DeviceMotionEvent.requestPermission().catch(() => 'denied'),
+      DeviceOrientationEvent.requestPermission().catch(() => 'denied')
+    ]).then(([motionState, orientState]) => {
+      btn.__callbacks.forEach(cb => cb());
+      btn.remove();
+    });
+  });
+
+  document.body.appendChild(btn);
 }
 
 /* ============================================
    EASTER EGG 14: GOLDEN THEME UNLOCK
-   Tap sequence: Ajit card → Alka card → Family hero photo
+   Tap sequence: Ajit circle → Alka circle → Family hero photo
    ============================================ */
 function initGoldenTheme() {
-  // The 3 elements to tap in order
-  const sequence = ['ajit-circle', 'alka-circle', 'footer-family-photo'];
+  const sequence = ['ajit-circle', 'alka-circle', 'hero-family-photo'];
   let step = 0;
   let resetTimer;
 
   function handleTap(id) {
     if (id !== sequence[step]) {
-      // Wrong element — reset
       step = 0;
       clearTimeout(resetTimer);
-      return;
-    }
-
-    step++;
-    clearTimeout(resetTimer);
-
-    if (step === sequence.length) {
-      // Sequence complete!
+      // Don't return immediately — check if this IS the first step
+      if (id !== sequence[0]) return;
       step = 0;
-      const isGolden = document.body.classList.toggle('golden-theme');
-      showGoldenToast(isGolden ? '👑 Royal Gold Mode Unlocked!' : '🔵 Back to Normal');
-    } else {
-      // Reset if no next tap within 4 seconds
-      resetTimer = setTimeout(() => { step = 0; }, 4000);
+    }
+    if (id === sequence[step]) {
+      step++;
+      clearTimeout(resetTimer);
+      if (step === sequence.length) {
+        step = 0;
+        const isGolden = document.body.classList.toggle('golden-theme');
+        showGoldenToast(isGolden ? '👑 Royal Gold Mode Unlocked!' : '🔵 Back to Normal');
+      } else {
+        resetTimer = setTimeout(() => { step = 0; }, 4000);
+      }
     }
   }
 
   sequence.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.addEventListener('click',     () => handleTap(id));
-    el.addEventListener('touchstart',() => handleTap(id), { passive: true });
+    el.addEventListener('click',      () => handleTap(id));
+    el.addEventListener('touchend',   () => handleTap(id), { passive: true });
   });
-
-  // Also make the footer year span clickable
-  const footerYear = document.getElementById('footer-family-photo');
-  if (footerYear) footerYear.style.cursor = 'pointer';
 }
 
 function showGoldenToast(msg) {
