@@ -741,11 +741,3 @@ footer span {
   font-weight: 700;
   color: var(--text-main);
 }
-
-/* Image centering adjustments */
-.photo-hero img { 
-  object-position: center 25%; 
-}
-.photo-circle img { 
-  object-position: center 20%; 
-}
