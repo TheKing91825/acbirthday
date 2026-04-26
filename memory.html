@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AC Family | Secret Memory Game</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.15) 0%, transparent 80%),
+        linear-gradient(to bottom, transparent 40%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.03) 60%, transparent 60%);
+      background-color: var(--bg-navy);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-logo">🎉 AC Family</div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="ajit.html">Ajit</a>
+      <a href="alka.html">Alka</a>
+      <a href="abhay.html">Abhay</a>
+      <a href="akshay.html">Akshay</a>
+    </div>
+  </nav>
+
+  <!-- Background Decorations -->
+  <div class="balloon-container" data-count="4"></div>
+
+  <!-- Main Game Section -->
+  <section class="container fade-in" style="flex: 1; margin-top: var(--space-xl); margin-bottom: var(--space-xl); text-align: center;">
+    <h1 style="color: var(--color-blue); margin-bottom: var(--space-sm);">Family Memory Game</h1>
+    <p style="color: var(--text-muted); margin-bottom: var(--space-xl);">Match the family photos! Find all 6 pairs.</p>
+
+    <!-- Score & Reset -->
+    <div style="display: flex; justify-content: space-between; max-width: 800px; margin: 0 auto var(--space-md) auto; align-items: center;">
+      <span style="font-size: 1.2rem; font-weight: bold; color: var(--color-gold);">Moves: <span id="move-count">0</span></span>
+      <button class="btn btn-blue" id="reset-btn" style="padding: 8px 16px; font-size: 1rem;">Restart Game</button>
+    </div>
+
+    <!-- The Grid -->
+    <div class="memory-grid" id="memory-grid">
+      <!-- JS will inject cards here -->
+    </div>
+    
+    <div id="win-message" style="display: none; margin-top: var(--space-xl);">
+      <h2 style="color: var(--color-green); margin-bottom: var(--space-md);">You did it! 🎉</h2>
+      <p style="font-size: 1.2rem;">Great job matching all the family memories.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>Made with ❤️ for the Chauhan Family &middot; <span>AC Family 🎉</span> &middot; 2026</p>
+  </footer>
+
+  <script src="main.js"></script>
+  <script>
+    // --- MEMORY GAME LOGIC ---
+    
+    
+    // When you are ready to add real photos, replace the empty strings below with the paths to the photos!
+    // Example: { id: 0, path: 'assets/images/family/Family.JPG' }
+    const photoPairs = [
+      { id: 0, path: '' }, // Pair 1
+      { id: 1, path: '' }, // Pair 2
+      { id: 2, path: '' }, // Pair 3
+      { id: 3, path: '' }, // Pair 4
+      { id: 4, path: '' }, // Pair 5
+      { id: 5, path: '' }  // Pair 6
+    ];
+
+    let cards = [];
+    let hasFlippedCard = false;
+    let lockBoard = false;
+    let firstCard, secondCard;
+    let moves = 0;
+    let matches = 0;
+
+    const grid = document.getElementById('memory-grid');
+    const moveCountDisplay = document.getElementById('move-count');
+    const winMessage = document.getElementById('win-message');
+    const resetBtn = document.getElementById('reset-btn');
+
+    function initGame() {
+      grid.innerHTML = '';
+      winMessage.style.display = 'none';
+      moves = 0;
+      matches = 0;
+      moveCountDisplay.textContent = moves;
+      hasFlippedCard = false;
+      lockBoard = false;
+      firstCard = null;
+      secondCard = null;
+
+      // Duplicate array to make pairs
+      cards = [...photoPairs, ...photoPairs];
+      
+      // Shuffle array
+      cards.sort(() => 0.5 - Math.random());
+
+      // Create card elements
+      cards.forEach((photoData) => {
+        const card = document.createElement('div');
+        card.classList.add('memory-card');
+        card.dataset.photoIndex = photoData.id; // Keep track of the pair ID
+        
+        // If no photo path provided, fallback to a color/emoji placeholder based on index
+        const fallbackColors = ['#fbbf24', '#fb7185', '#38bdf8', '#34d399', '#a78bfa', '#f87171'];
+        const fallbackEmojis = ['👑', '❤️', '🌍', '⭐', '🎂', '🎈'];
+        const pairId = photoData.id;
+
+        const innerHTML = `
+          <div class="memory-card-inner">
+            <div class="memory-card-front">
+              <span>❓</span>
+            </div>
+            <div class="memory-card-back" style="${photoData.path ? '' : `background-color: ${fallbackColors[pairId]}; display:flex; align-items:center; justify-content:center; font-size:4rem;`}">
+              ${photoData.path 
+                ? `<img src="${photoData.path}" alt="Memory" style="width:100%; height:100%; object-fit:cover;">` 
+                : `<span>${fallbackEmojis[pairId]}</span>`
+              }
+            </div>
+          </div>
+        `;
+        card.innerHTML = innerHTML;
+        card.addEventListener('click', flipCard);
+        grid.appendChild(card);
+      });
+    }
+
+
+    function flipCard() {
+      if (lockBoard) return;
+      if (this === firstCard) return;
+
+      this.classList.add('flipped');
+
+      if (!hasFlippedCard) {
+        // First click
+        hasFlippedCard = true;
+        firstCard = this;
+        return;
+      }
+
+      // Second click
+      secondCard = this;
+      moves++;
+      moveCountDisplay.textContent = moves;
+      checkForMatch();
+    }
+
+    function checkForMatch() {
+      let isMatch = firstCard.dataset.photoIndex === secondCard.dataset.photoIndex;
+
+      if (isMatch) {
+        disableCards();
+      } else {
+        unflipCards();
+      }
+    }
+
+    function disableCards() {
+      firstCard.removeEventListener('click', flipCard);
+      secondCard.removeEventListener('click', flipCard);
+      firstCard.classList.add('matched');
+      secondCard.classList.add('matched');
+
+      resetBoard();
+      matches++;
+
+      if (matches === photoPairs.length) {
+        setTimeout(() => {
+          winMessage.style.display = 'block';
+          if (typeof initConfetti === 'function') {
+            initConfetti();
+          }
+        }, 500);
+      }
+    }
+
+    function unflipCards() {
+      lockBoard = true;
+
+      setTimeout(() => {
+        firstCard.classList.remove('flipped');
+        secondCard.classList.remove('flipped');
+        resetBoard();
+      }, 1000);
+    }
+
+    function resetBoard() {
+      [hasFlippedCard, lockBoard] = [false, false];
+      [firstCard, secondCard] = [null, null];
+    }
+
+    resetBtn.addEventListener('click', initGame);
+
+    // Initialize the game on load
+    initGame();
+  </script>
+</body>
+
+</html>

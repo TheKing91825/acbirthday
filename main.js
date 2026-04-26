@@ -19,6 +19,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 7. Wordle Game
   initWordle();
+
+  // 8. Secret Nav Link to Memory Game
+  const navLogo = document.querySelector('.nav-logo');
+  if (navLogo) {
+    navLogo.style.cursor = 'pointer';
+    navLogo.addEventListener('click', () => {
+      window.location.href = 'memory.html';
+    });
+  }
+
+  // 9. Party Mode Toggle (Cake Emoji)
+  const cakeBtn = document.getElementById('party-mode-btn');
+  if (cakeBtn) {
+    cakeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('party-mode');
+    });
+  }
+
+  // 10. Modified Konami Code (Up, Up, Down, Down, Left, Right)
+  const secretCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+  let codePosition = 0;
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === secretCode[codePosition]) {
+      codePosition++;
+      if (codePosition === secretCode.length) {
+        // Code entered!
+        document.body.classList.toggle('disco-mode');
+        initConfetti();
+        codePosition = 0; // Reset
+      }
+    } else {
+      codePosition = 0; // Reset if mistake
+    }
+  });
+
 });
 
 /**
