@@ -783,14 +783,21 @@ body.party-mode .photo-placeholder {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 15px;
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .memory-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .memory-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 }
 
