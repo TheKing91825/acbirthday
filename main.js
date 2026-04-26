@@ -45,15 +45,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === secretCode[codePosition]) {
       codePosition++;
       if (codePosition === secretCode.length) {
-        // Code entered!
         document.body.classList.toggle('disco-mode');
         initConfetti();
-        codePosition = 0; // Reset
+        codePosition = 0;
       }
     } else {
-      codePosition = 0; // Reset if mistake
+      codePosition = 0;
     }
   });
+
+  // 11. Shake to Celebrate (phone shake → confetti cannon)
+  initShakeToConfetti();
+
+  // 12. Time Capsule Messages (double-tap circular photos on home page)
+  initTimeCapsule();
+
+  // 13. Gravity Balloons (device tilt)
+  initGravityBalloons();
+
+  // 14. Golden Theme Unlock (tap Ajit → Alka → Family photo)
+  initGoldenTheme();
 
 });
 
@@ -498,4 +509,224 @@ function initWordle() {
       letter.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 1500);
   }
+}
+
+/* ============================================
+   EASTER EGG 11: SHAKE TO CELEBRATE
+   Uses DeviceMotionEvent to detect phone shake
+   ============================================ */
+function initShakeToConfetti() {
+  let lastX = null, lastY = null, lastZ = null;
+  let lastShakeTime = 0;
+  const SHAKE_THRESHOLD = 18;
+  const COOLDOWN_MS = 3000;
+
+  function handleMotion(e) {
+    const acc = e.accelerationIncludingGravity;
+    if (!acc) return;
+
+    const { x, y, z } = acc;
+    if (lastX === null) { lastX = x; lastY = y; lastZ = z; return; }
+
+    const delta = Math.abs(x - lastX) + Math.abs(y - lastY) + Math.abs(z - lastZ);
+    lastX = x; lastY = y; lastZ = z;
+
+    const now = Date.now();
+    if (delta > SHAKE_THRESHOLD && now - lastShakeTime > COOLDOWN_MS) {
+      lastShakeTime = now;
+      // Fire a BIG confetti cannon — 3 bursts
+      initConfetti();
+      setTimeout(initConfetti, 400);
+      setTimeout(initConfetti, 800);
+    }
+  }
+
+  // iOS 13+ requires permission
+  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+    // We'll ask permission on the first user interaction
+    const askOnce = () => {
+      DeviceMotionEvent.requestPermission().then(state => {
+        if (state === 'granted') {
+          window.addEventListener('devicemotion', handleMotion);
+        }
+      }).catch(() => {});
+      document.removeEventListener('touchstart', askOnce);
+    };
+    document.addEventListener('touchstart', askOnce, { once: true });
+  } else if (typeof DeviceMotionEvent !== 'undefined') {
+    window.addEventListener('devicemotion', handleMotion);
+  }
+}
+
+/* ============================================
+   EASTER EGG 12: TIME CAPSULE MESSAGES
+   Double-tap (or click) circular photos on home page
+   ============================================ */
+function initTimeCapsule() {
+  // Messages for each family member's circular photo
+  const capsules = {
+    'ajit-circle':  { icon: '👑', message: 'The OG. 51 years of pure greatness. We love you, Dad!' },
+    'alka-circle':  { icon: '❤️', message: 'The heart of our family. Always there, always loving. We love you, Mom!' },
+    'abhay-circle': { icon: '🌍', message: 'Exploring the world, one adventure at a time. Keep going!' },
+    'akshay-circle':{ icon: '😈', message: 'YOU THOUGHT 😈' },
+  };
+
+  // Build the overlay once
+  const overlay = document.createElement('div');
+  overlay.className = 'time-capsule-overlay';
+  overlay.innerHTML = `
+    <div class="time-capsule-card">
+      <button class="tc-close">&times;</button>
+      <span class="tc-icon" id="tc-icon"></span>
+      <div class="tc-message" id="tc-message"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  function openCapsule(id) {
+    const data = capsules[id];
+    if (!data) return;
+    document.getElementById('tc-icon').textContent = data.icon;
+    document.getElementById('tc-message').textContent = data.message;
+    overlay.classList.add('active');
+  }
+
+  function closeCapsule() {
+    overlay.classList.remove('active');
+  }
+
+  overlay.querySelector('.tc-close').addEventListener('click', closeCapsule);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeCapsule(); });
+
+  // Attach listeners to each circle
+  Object.keys(capsules).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    // Double-click for desktop
+    el.addEventListener('dblclick', () => openCapsule(id));
+
+    // Double-tap for mobile
+    let lastTap = 0;
+    el.addEventListener('touchend', e => {
+      const now = Date.now();
+      if (now - lastTap < 350) {
+        e.preventDefault();
+        openCapsule(id);
+      }
+      lastTap = now;
+    });
+  });
+}
+
+/* ============================================
+   EASTER EGG 13: GRAVITY BALLOONS
+   Balloons drift based on device tilt (gyroscope)
+   ============================================ */
+function initGravityBalloons() {
+  if (!window.DeviceOrientationEvent) return;
+
+  let tiltX = 0, tiltY = 0;
+  let animFrame;
+
+  function handleOrientation(e) {
+    // gamma = left/right tilt (-90 to 90), beta = front/back (-180 to 180)
+    tiltX = (e.gamma || 0) / 45; // normalize to -1 .. 1
+    tiltY = (e.beta  || 0) / 90; // normalize to -1 .. 1
+  }
+
+  function applyTilt() {
+    const balloons = document.querySelectorAll('.balloon');
+    balloons.forEach((b, i) => {
+      // Each balloon drifts at a slightly different rate for a natural effect
+      const factor = 0.8 + (i % 3) * 0.4;
+      const shiftX = tiltX * 30 * factor;
+      const shiftY = tiltY * 15 * factor;
+      b.style.marginLeft = `${shiftX}px`;
+      b.style.marginTop  = `${shiftY}px`;
+    });
+    animFrame = requestAnimationFrame(applyTilt);
+  }
+
+  function startGravity() {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().then(state => {
+        if (state === 'granted') {
+          window.addEventListener('deviceorientation', handleOrientation);
+          applyTilt();
+        }
+      }).catch(() => {});
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation);
+      applyTilt();
+    }
+    document.removeEventListener('touchstart', startGravity);
+  }
+
+  // Start on first touch (handles iOS permission)
+  document.addEventListener('touchstart', startGravity, { once: true });
+}
+
+/* ============================================
+   EASTER EGG 14: GOLDEN THEME UNLOCK
+   Tap sequence: Ajit card → Alka card → Family hero photo
+   ============================================ */
+function initGoldenTheme() {
+  // The 3 elements to tap in order
+  const sequence = ['ajit-circle', 'alka-circle', 'footer-family-photo'];
+  let step = 0;
+  let resetTimer;
+
+  function handleTap(id) {
+    if (id !== sequence[step]) {
+      // Wrong element — reset
+      step = 0;
+      clearTimeout(resetTimer);
+      return;
+    }
+
+    step++;
+    clearTimeout(resetTimer);
+
+    if (step === sequence.length) {
+      // Sequence complete!
+      step = 0;
+      const isGolden = document.body.classList.toggle('golden-theme');
+      showGoldenToast(isGolden ? '👑 Royal Gold Mode Unlocked!' : '🔵 Back to Normal');
+    } else {
+      // Reset if no next tap within 4 seconds
+      resetTimer = setTimeout(() => { step = 0; }, 4000);
+    }
+  }
+
+  sequence.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('click',     () => handleTap(id));
+    el.addEventListener('touchstart',() => handleTap(id), { passive: true });
+  });
+
+  // Also make the footer year span clickable
+  const footerYear = document.getElementById('footer-family-photo');
+  if (footerYear) footerYear.style.cursor = 'pointer';
+}
+
+function showGoldenToast(msg) {
+  // Remove any existing toast
+  const old = document.querySelector('.golden-toast');
+  if (old) old.remove();
+
+  const toast = document.createElement('div');
+  toast.className = 'golden-toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => toast.classList.add('show'));
+  });
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 500);
+  }, 3000);
 }

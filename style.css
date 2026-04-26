@@ -857,3 +857,134 @@ body.party-mode .photo-placeholder {
   height: 100%;
   object-fit: cover;
 }
+
+/* ============================================
+   EASTER EGG: TIME CAPSULE POPUP
+   ============================================ */
+.time-capsule-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.time-capsule-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.time-capsule-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 40px 48px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+  transform: scale(0.8);
+  transition: transform 0.3s ease;
+  box-shadow: 0 0 60px rgba(251, 191, 36, 0.3);
+}
+
+.time-capsule-overlay.active .time-capsule-card {
+  transform: scale(1);
+}
+
+.time-capsule-card .tc-icon {
+  font-size: 3.5rem;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.time-capsule-card .tc-message {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.time-capsule-card .tc-close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: rgba(255,255,255,0.6);
+  background: none;
+  border: none;
+  line-height: 1;
+}
+
+.time-capsule-card .tc-close:hover {
+  color: white;
+}
+
+/* ============================================
+   EASTER EGG: GOLDEN THEME
+   ============================================ */
+body.golden-theme {
+  background-color: #0a0700 !important;
+  background-image:
+    linear-gradient(to bottom, #0a0700, #1a1000),
+    radial-gradient(ellipse at 50% 0%, rgba(251,191,36,0.2), transparent 60%) !important;
+}
+
+body.golden-theme .glass-card,
+body.golden-theme nav,
+body.golden-theme footer {
+  background: rgba(251, 191, 36, 0.08) !important;
+  border-color: rgba(251, 191, 36, 0.25) !important;
+  box-shadow: 0 8px 32px rgba(251, 191, 36, 0.2) !important;
+}
+
+body.golden-theme .btn {
+  background: linear-gradient(135deg, #b45309, #fbbf24) !important;
+  color: #000 !important;
+}
+
+body.golden-theme nav .nav-logo,
+body.golden-theme h1,
+body.golden-theme h2,
+body.golden-theme h3 {
+  color: #fbbf24 !important;
+}
+
+body.golden-theme .age-number {
+  color: #fbbf24 !important;
+  text-shadow: 0 0 30px rgba(251,191,36,0.6) !important;
+}
+
+body.golden-theme .balloon {
+  background-color: #fbbf24 !important;
+}
+
+/* golden theme notification toast */
+.golden-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: linear-gradient(135deg, #b45309, #fbbf24);
+  color: #000;
+  font-weight: bold;
+  padding: 14px 28px;
+  border-radius: 999px;
+  font-size: 1rem;
+  z-index: 9999;
+  box-shadow: 0 4px 20px rgba(251,191,36,0.5);
+  transition: transform 0.4s ease;
+  pointer-events: none;
+}
+
+.golden-toast.show {
+  transform: translateX(-50%) translateY(0);
+}
