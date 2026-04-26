@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // 6. Days Alive Calculator (if the stats element exists on the page)
   updateDaysAliveStats();
+
+  // 7. Wordle Game
+  initWordle();
 });
 
 /**
@@ -243,14 +246,220 @@ function updateDaysAliveStats() {
   const days = calculateDaysAlive(birthdate);
   const sunrises = days;
   const heartbeats = days * 100000;
-  const chai = days * 2;
+  
+  // Chai counting from September 12, 2002
+  const chaiStartDate = new Date('2002-09-12');
+  const today = new Date();
+  const chaiDays = Math.ceil(Math.abs(today - chaiStartDate) / (1000 * 60 * 60 * 24));
+  const chai = chaiDays * 2;
   
   statsContainer.innerHTML = `
     <p style="font-size: 1.2rem; margin-bottom: 1rem;">Ajit has brightened the world for <strong>${days.toLocaleString()}</strong> days and counting! 🌟</p>
     <ul style="list-style: none; padding: 0; font-size: 1.1rem; line-height: 1.8;">
       <li>🌅 That's <strong>${sunrises.toLocaleString()}</strong> sunrises</li>
       <li>❤️ <strong>${heartbeats.toLocaleString()}</strong> heartbeats (approx)</li>
-      <li>☕ <strong>${chai.toLocaleString()}</strong> cups of chai (approx)</li>
+      <li>☕ <strong>${chai.toLocaleString()}</strong> cups of chai (since Sept 12, 2002)</li>
     </ul>
   `;
+}
+
+
+/**
+ * Wordle Game Implementation
+ */
+function initWordle() {
+  const grid = document.getElementById('wordle-grid');
+  const keyboard = document.getElementById('wordle-keyboard');
+  if (!grid || !keyboard) return;
+
+  const targetWord = "PADRE";
+  const maxGuesses = 6;
+  const wordLength = 5;
+  let currentGuess = "";
+  let guesses = [];
+  let isGameOver = false;
+
+  // Build grid
+  for (let i = 0; i < maxGuesses; i++) {
+    const row = document.createElement('div');
+    row.style.display = 'grid';
+    row.style.gridTemplateColumns = `repeat(${wordLength}, 1fr)`;
+    row.style.gap = '8px';
+    
+    for (let j = 0; j < wordLength; j++) {
+      const tile = document.createElement('div');
+      tile.className = 'wordle-tile';
+      tile.id = `tile-${i}-${j}`;
+      tile.style.border = '2px solid rgba(255, 255, 255, 0.2)';
+      tile.style.display = 'flex';
+      tile.style.justifyContent = 'center';
+      tile.style.alignItems = 'center';
+      tile.style.fontSize = '2rem';
+      tile.style.fontWeight = 'bold';
+      tile.style.textTransform = 'uppercase';
+      tile.style.height = '60px';
+      tile.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+      row.appendChild(tile);
+    }
+    grid.appendChild(row);
+  }
+
+  // Build keyboard
+  const keys = [
+    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+    ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'DEL']
+  ];
+
+  keys.forEach(rowKeys => {
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'center';
+    row.style.gap = '6px';
+    
+    rowKeys.forEach(key => {
+      const btn = document.createElement('button');
+      btn.textContent = key;
+      btn.id = `key-${key}`;
+      btn.style.padding = key === 'ENTER' || key === 'DEL' ? '12px 10px' : '12px 0';
+      btn.style.flex = key === 'ENTER' || key === 'DEL' ? '1.5' : '1';
+      btn.style.border = 'none';
+      btn.style.borderRadius = '4px';
+      btn.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+      btn.style.color = 'white';
+      btn.style.fontWeight = 'bold';
+      btn.style.cursor = 'pointer';
+      
+      btn.addEventListener('click', () => handleKeyPress(key));
+      row.appendChild(btn);
+    });
+    keyboard.appendChild(row);
+  });
+
+  // Handle physical keyboard
+  document.addEventListener('keydown', (e) => {
+    if (isGameOver) return;
+    const key = e.key.toUpperCase();
+    if (key === 'ENTER') {
+      handleKeyPress('ENTER');
+    } else if (key === 'BACKSPACE') {
+      handleKeyPress('DEL');
+    } else if (/^[A-Z]$/.test(key)) {
+      handleKeyPress(key);
+    }
+  });
+
+  function handleKeyPress(key) {
+    if (isGameOver) return;
+    
+    const msg = document.getElementById('wordle-message');
+    msg.textContent = '';
+
+    if (key === 'DEL') {
+      if (currentGuess.length > 0) {
+        currentGuess = currentGuess.slice(0, -1);
+        updateGrid();
+      }
+    } else if (key === 'ENTER') {
+      if (currentGuess.length < wordLength) {
+        msg.textContent = 'Not enough letters';
+      } else {
+        submitGuess();
+      }
+    } else {
+      if (currentGuess.length < wordLength) {
+        currentGuess += key;
+        updateGrid();
+      }
+    }
+  }
+
+  function updateGrid() {
+    const rowIdx = guesses.length;
+    for (let i = 0; i < wordLength; i++) {
+      const tile = document.getElementById(`tile-${rowIdx}-${i}`);
+      tile.textContent = currentGuess[i] || '';
+      if (currentGuess[i]) {
+        tile.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+      } else {
+        tile.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+      }
+    }
+  }
+
+  function submitGuess() {
+    const rowIdx = guesses.length;
+    const guessArr = currentGuess.split('');
+    const targetArr = targetWord.split('');
+    
+    // First pass: find exact matches (green)
+    let exactMatches = 0;
+    guessArr.forEach((char, i) => {
+      const tile = document.getElementById(`tile-${rowIdx}-${i}`);
+      const keyBtn = document.getElementById(`key-${char}`);
+      
+      if (char === targetArr[i]) {
+        tile.style.backgroundColor = '#22c55e'; // Green
+        tile.style.borderColor = '#22c55e';
+        keyBtn.style.backgroundColor = '#22c55e';
+        targetArr[i] = null; // Consume the letter
+        guessArr[i] = null;
+        exactMatches++;
+      }
+    });
+
+    // Second pass: find partial matches (yellow) and misses (gray)
+    guessArr.forEach((char, i) => {
+      if (char === null) return; // already green
+      
+      const tile = document.getElementById(`tile-${rowIdx}-${i}`);
+      const keyBtn = document.getElementById(`key-${char}`);
+      const targetIdx = targetArr.indexOf(char);
+      
+      if (targetIdx > -1) {
+        tile.style.backgroundColor = '#eab308'; // Yellow
+        tile.style.borderColor = '#eab308';
+        if (keyBtn.style.backgroundColor !== 'rgb(34, 197, 94)') { // Not already green
+          keyBtn.style.backgroundColor = '#eab308';
+        }
+        targetArr[targetIdx] = null; // Consume the letter
+      } else {
+        tile.style.backgroundColor = '#475569'; // Gray
+        tile.style.borderColor = '#475569';
+        if (keyBtn.style.backgroundColor !== 'rgb(34, 197, 94)' && keyBtn.style.backgroundColor !== 'rgb(234, 179, 8)') {
+          keyBtn.style.backgroundColor = '#475569';
+        }
+      }
+    });
+
+    guesses.push(currentGuess);
+    
+    if (exactMatches === wordLength) {
+      gameWon();
+    } else if (guesses.length === maxGuesses) {
+      document.getElementById('wordle-message').textContent = `The word was ${targetWord}. But we'll let you in anyway!`;
+      setTimeout(gameWon, 2000);
+    }
+    
+    currentGuess = "";
+  }
+
+  function gameWon() {
+    isGameOver = true;
+    document.getElementById('wordle-message').textContent = 'Magnificent! Unlocking letter...';
+    
+    // Confetti effect
+    initConfetti();
+
+    setTimeout(() => {
+      document.getElementById('wordle-container').style.display = 'none';
+      document.getElementById('wordle-instructions').style.display = 'none';
+      
+      const letter = document.getElementById('letter-content');
+      letter.style.display = 'block';
+      
+      // Scroll to letter smoothly
+      letter.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 1500);
+  }
 }

@@ -114,49 +114,25 @@
     </div>
   </section>
 
-  <!-- Messages Section -->
-  <section class="container fade-in">
-    <h2 style="color: var(--color-gold); text-align: center; margin-top: var(--space-xl);">Words of Love 💛</h2>
-    <p style="text-align: center; color: var(--text-muted);">51 Reasons We Love Ajit</p>
+  <!-- Wordle & Letter Section -->
+  <section class="container fade-in" id="letter-section" style="margin-top: var(--space-xl); text-align: center;">
+    <h2 style="color: var(--color-gold);">A Special Letter 💛</h2>
+    <p style="color: var(--text-muted); margin-bottom: var(--space-lg);" id="wordle-instructions">You must solve the puzzle to unlock your letter.</p>
+    
+    <div id="wordle-container" style="max-width: 350px; margin: 0 auto; margin-bottom: var(--space-xl);">
+      <div id="wordle-grid" style="display: grid; grid-template-rows: repeat(6, 1fr); gap: 8px; margin-bottom: 20px;">
+        <!-- JS will populate -->
+      </div>
+      <div id="wordle-keyboard" style="display: flex; flex-direction: column; gap: 8px;">
+         <!-- JS will populate -->
+      </div>
+      <div id="wordle-message" style="margin-top: 15px; font-weight: bold; height: 1.5rem; color: var(--color-gold);"></div>
+    </div>
 
-    <div class="messages-grid">
-      <!-- Card 1 -->
-      <div class="message-card" style="border-top-color: #fcd34d;">
-        <span class="icon-top">💛</span>
-        <p>"[Write your message for Ajit here]"</p>
-        <div class="from">- [From: ___]</div>
-      </div>
-      <!-- Card 2 -->
-      <div class="message-card" style="border-top-color: #f472b6;">
-        <span class="icon-top">💖</span>
-        <p>"[Write your message for Ajit here]"</p>
-        <div class="from">- [From: ___]</div>
-      </div>
-      <!-- Card 3 -->
-      <div class="message-card" style="border-top-color: #38bdf8;">
-        <span class="icon-top">💙</span>
-        <p>"[Write your message for Ajit here]"</p>
-        <div class="from">- [From: ___]</div>
-      </div>
-      <!-- Card 4 -->
-      <div class="message-card" style="border-top-color: #34d399;">
-        <span class="icon-top">💚</span>
-        <p>"[Write your message for Ajit here]"</p>
-        <div class="from">- [From: ___]</div>
-      </div>
-      <!-- Card 5 -->
-      <div class="message-card" style="border-top-color: #fb7185;">
-        <span class="icon-top">❤️</span>
-        <p>"[Write your message for Ajit here]"</p>
-        <div class="from">- [From: ___]</div>
-      </div>
-      <!-- Card 6 -->
-      <div class="message-card" style="border-top-color: #a78bfa;">
-        <span class="icon-top">💜</span>
-        <p>"[Write your message for Ajit here]"</p>
-        <div class="from">- [From: ___]</div>
-      </div>
-      <!-- Add more cards by copying the .message-card div -->
+    <div id="letter-content" class="glass-card fade-in" style="display: none; max-width: 800px; margin: 0 auto; border-color: var(--color-gold); text-align: left; padding: var(--space-xl);">
+      <h3 style="color: var(--color-gold); margin-bottom: var(--space-md); font-family: var(--font-heading); font-size: 2rem;">Happy Birthday, Padre!</h3>
+      <p style="font-size: 1.2rem; line-height: 1.8; margin-bottom: var(--space-md);">[This is a placeholder for your personal letter to Ajit. Write from the heart! You can talk about the amazing 51 years he has had, the memories you've shared, and all the reasons why he's the greatest.]</p>
+      <p style="font-size: 1.2rem; line-height: 1.8;">With all our love,<br>The Family</p>
     </div>
   </section>
 
@@ -165,7 +141,7 @@
     <h2 style="color: var(--color-gold);">Fun Facts</h2>
     <div class="glass-card" style="max-width: 600px; margin: 0 auto; border: 1px solid var(--color-gold);">
       <!-- Update data-birthdate to the actual date -->
-      <div id="fun-facts-stats" data-birthdate="1975-01-01">
+      <div id="fun-facts-stats" data-birthdate="1975-04-27">
         <!-- JS will populate this -->
       </div>
     </div>
