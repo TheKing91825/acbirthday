@@ -247,8 +247,8 @@ function updateDaysAliveStats() {
   const sunrises = days;
   const heartbeats = days * 100000;
   
-  // Chai counting from September 12, 2002
-  const chaiStartDate = new Date('2002-09-12');
+  // Chai counting from October 12, 2002
+  const chaiStartDate = new Date('2002-10-12');
   const today = new Date();
   const chaiDays = Math.ceil(Math.abs(today - chaiStartDate) / (1000 * 60 * 60 * 24));
   const chai = chaiDays * 2;
@@ -258,7 +258,7 @@ function updateDaysAliveStats() {
     <ul style="list-style: none; padding: 0; font-size: 1.1rem; line-height: 1.8;">
       <li>🌅 That's <strong>${sunrises.toLocaleString()}</strong> sunrises</li>
       <li>❤️ <strong>${heartbeats.toLocaleString()}</strong> heartbeats (approx)</li>
-      <li>☕ <strong>${chai.toLocaleString()}</strong> cups of chai (since Sept 12, 2002)</li>
+      <li>☕ <strong>${chai.toLocaleString()}</strong> cups of chai (since Oct 12, 2002)</li>
     </ul>
   `;
 }
