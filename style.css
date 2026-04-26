@@ -377,13 +377,13 @@ nav {
    Balloons (Pure CSS Shapes & Animation)
    ========================================= */
 .balloon-container {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  z-index: -1;
+  z-index: 50;
   pointer-events: none;
 }
 
@@ -396,6 +396,15 @@ nav {
   animation: floatUp linear infinite;
   opacity: 0.85;
   box-shadow: inset -10px -10px 15px rgba(0,0,0,0.1), inset 10px 10px 10px rgba(255,255,255,0.4);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.balloon.popped {
+  transform: scale(1.5) !important;
+  opacity: 0 !important;
+  pointer-events: none;
 }
 
 /* Balloon knot */
